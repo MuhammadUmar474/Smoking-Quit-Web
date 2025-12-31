@@ -14,6 +14,7 @@ import { createContext } from './trpc/context.js';
 import { authRoutes } from './routes/auth.js';
 import { authMiddleware } from './middleware/auth.js';
 import { stripeWebhookRoutes } from './routes/stripe-webhook.js';
+import { runMigrationsOnStart } from './db/run-new-migrations.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -50,8 +51,7 @@ await fastify.register(cors, {
 
     // In production on Railway, allow the production domain
     const productionDomains = [
-      'https://smoking-quit-production.up.railway.app',
-      'http://smoking-quit-production.up.railway.app'
+      'https://quit-smoking.up.railway.app/'
     ];
 
     // List of allowed origins
@@ -81,11 +81,12 @@ await fastify.register(rateLimit, {
 // Register authentication middleware
 fastify.decorate('authenticate', authMiddleware);
 
-// Auth routes
-await fastify.register(authRoutes);
-
-// Stripe webhook routes (must be before body parser plugins)
+// Stripe webhook routes (must be registered early to set up custom JSON parser)
+// This preserves raw body for webhook signature verification
 await fastify.register(stripeWebhookRoutes);
+
+// Auth routes (registered after webhook routes so they use the custom JSON parser)
+await fastify.register(authRoutes);
 
 // tRPC Plugin
 await fastify.register(fastifyTRPCPlugin, {
@@ -178,6 +179,11 @@ if (frontendDistPath) {
 // Start server
 const start = async () => {
   try {
+    // Run migrations before starting server (non-blocking)
+    await runMigrationsOnStart().catch((err) => {
+      console.warn('Migration check failed, but continuing:', err);
+    });
+
     const port = parseInt(process.env.PORT || '3000', 10);
     const host = process.env.HOST || '0.0.0.0';
 

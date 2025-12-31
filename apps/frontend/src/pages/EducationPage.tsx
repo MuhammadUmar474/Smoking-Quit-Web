@@ -1,20 +1,22 @@
 import { AppShell } from '@/components/layout/AppShell';
-import { useState } from 'react';
-import { ChevronDown, Minus } from 'lucide-react';
-
-type SectionId = 'addiction' | 'withdrawal' | 'coping' | 'health' | 'tips';
+import EducationDetails from '@/components/education/EducationDetails';
+import EducationResources from '@/components/education/EducationResources';
 
 export function EducationPage() {
-  const [openSection, setOpenSection] = useState<SectionId | null>(null);
-
-  const toggleSection = (section: SectionId) => {
-    setOpenSection(openSection === section ? null : section);
-  };
 
   return (
     <AppShell title="Education & Resources">
-      <div className="max-w-4xl mx-auto px-6 py-16">
-        {/* Hero Introduction */}
+
+
+    <div className='px-6'>
+      <div className='mb-8'>
+        <EducationDetails />
+      </div>
+      <EducationResources /> 
+    </div>
+
+
+      {/* <div className="max-w-4xl mx-auto px-6 py-16">
         <div className="mb-20 text-center">
           <h1 className="text-6xl font-extralight tracking-tight text-gray-900 mb-6">
             Your Journey to Freedom
@@ -24,9 +26,7 @@ export function EducationPage() {
           </p>
         </div>
 
-        {/* Accordion Sections */}
         <div className="space-y-2">
-          {/* Understanding Addiction */}
           <AccordionSection
             title="Understanding Addiction"
             subtitle="How nicotine affects your brain"
@@ -96,7 +96,6 @@ export function EducationPage() {
             </div>
           </AccordionSection>
 
-          {/* Withdrawal Timeline */}
           <AccordionSection
             title="Withdrawal Timeline"
             subtitle="What to expect and when"
@@ -146,7 +145,6 @@ export function EducationPage() {
             </div>
           </AccordionSection>
 
-          {/* Coping Strategies */}
           <AccordionSection
             title="Coping Strategies"
             subtitle="Tools to help you succeed"
@@ -211,7 +209,6 @@ export function EducationPage() {
             </div>
           </AccordionSection>
 
-          {/* Health Benefits */}
           <AccordionSection
             title="Health Benefits"
             subtitle="Your body's recovery timeline"
@@ -273,7 +270,6 @@ export function EducationPage() {
             </div>
           </AccordionSection>
 
-          {/* Tips for Success */}
           <AccordionSection
             title="Tips for Success"
             subtitle="Strategies for common situations"
@@ -367,51 +363,51 @@ export function EducationPage() {
             </div>
           </AccordionSection>
         </div>
-      </div>
+      </div> */}
     </AppShell>
   );
 }
 
 // Accordion Section Component
-function AccordionSection({
-  title,
-  subtitle,
-  isOpen,
-  onToggle,
-  children
-}: {
-  title: string;
-  subtitle: string;
-  isOpen: boolean;
-  onToggle: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="border border-gray-200 rounded-lg overflow-hidden hover:border-gray-300 transition-colors">
-      <button
-        onClick={onToggle}
-        className="w-full px-8 py-6 flex items-center justify-between bg-white hover:bg-gray-50 transition-colors text-left"
-      >
-        <div>
-          <h2 className="text-2xl font-light text-gray-900">{title}</h2>
-          <p className="text-sm text-gray-500 mt-1">{subtitle}</p>
-        </div>
-        <ChevronDown
-          className={`w-6 h-6 text-gray-400 transition-transform duration-200 ${
-            isOpen ? 'transform rotate-180' : ''
-          }`}
-        />
-      </button>
+// function AccordionSection({
+//   title,
+//   subtitle,
+//   isOpen,
+//   onToggle,
+//   children
+// }: {
+//   title: string;
+//   subtitle: string;
+//   isOpen: boolean;
+//   onToggle: () => void;
+//   children: React.ReactNode;
+// }) {
+//   return (
+//     <div className="border border-gray-200 rounded-lg overflow-hidden hover:border-gray-300 transition-colors">
+//       <button
+//         onClick={onToggle}
+//         className="w-full px-8 py-6 flex items-center justify-between bg-white hover:bg-gray-50 transition-colors text-left"
+//       >
+//         <div>
+//           <h2 className="text-2xl font-light text-gray-900">{title}</h2>
+//           <p className="text-sm text-gray-500 mt-1">{subtitle}</p>
+//         </div>
+//         <ChevronDown
+//           className={`w-6 h-6 text-gray-400 transition-transform duration-200 ${
+//             isOpen ? 'transform rotate-180' : ''
+//           }`}
+//         />
+//       </button>
 
-      <div
-        className={`overflow-hidden transition-all duration-300 ease-in-out ${
-          isOpen ? 'max-h-[5000px] opacity-100' : 'max-h-0 opacity-0'
-        }`}
-      >
-        <div className="px-8 py-8 bg-white border-t border-gray-100">
-          {children}
-        </div>
-      </div>
-    </div>
-  );
-}
+//       <div
+//         className={`overflow-hidden transition-all duration-300 ease-in-out ${
+//           isOpen ? 'max-h-[5000px] opacity-100' : 'max-h-0 opacity-0'
+//         }`}
+//       >
+//         <div className="px-8 py-8 bg-white border-t border-gray-100">
+//           {children}
+//         </div>
+//       </div>
+//     </div>
+//   );
+// }
