@@ -51,7 +51,7 @@ await fastify.register(cors, {
 
     // In production on Railway, allow the production domain
     const productionDomains = [
-      'https://quit-smoking.up.railway.app/'
+      'https://quit-smoking.up.railway.app',
     ];
 
     // List of allowed origins
