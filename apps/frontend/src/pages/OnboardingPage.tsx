@@ -47,6 +47,8 @@ export function OnboardingPage() {
   const [isValidatingEmail, setIsValidatingEmail] = useState(false);
   const [hoveredOption, setHoveredOption] = useState<ProductType | null>(null);
   const [hoveredNumber, setHoveredNumber] = useState<number | string | null>(null);
+  const [isRedirectingToPayment, setIsRedirectingToPayment] = useState(false);
+  const [selectedPaymentOption, setSelectedPaymentOption] = useState<'lifetime' | 'trial' | null>(null);
 
   // Load saved progress from localStorage
   const [formData, setFormData] = useState<OnboardingFormData>(() => {
@@ -144,11 +146,7 @@ export function OnboardingPage() {
 
   const createQuitAttempt = trpc.quitAttempts.create.useMutation({
     onSuccess: () => {
-      toast({
-        title: 'Your journey begins!',
-        description: "You've taken the first step. We're here with you, one day at a time.",
-      });
-      navigate('/dashboard');
+      // Success handled in handleSubmit after payment redirect
     },
     onError: (error) => {
       toast({
@@ -156,8 +154,11 @@ export function OnboardingPage() {
         description: error.message,
         variant: 'destructive',
       });
+      setIsRedirectingToPayment(false);
     },
   });
+
+  const createLifetimeCheckout = trpc.subscription.createLifetimeCheckoutSession.useMutation();
 
   const validateEmail = async (): Promise<boolean> => {
     setEmailError(null);
@@ -226,6 +227,8 @@ export function OnboardingPage() {
       return;
     }
 
+    setIsRedirectingToPayment(true);
+
     try {
       // Use relative URL if VITE_API_URL is not set (for same-origin deployment)
       const apiUrl = import.meta.env.VITE_API_URL || '';
@@ -256,7 +259,7 @@ export function OnboardingPage() {
       const dailyNum = parseFloat(formData.weeklyUsage) || 0;
       const monthlyNum = parseFloat(formData.monthlySpending) || 0;
       // weeklyUsage now stores daily usage for all product types
-      createQuitAttempt.mutate({
+      await createQuitAttempt.mutateAsync({
         quitDate: new Date().toISOString(),
         productType: formData.productType,
         dailyUsage: Math.round(dailyNum),
@@ -264,7 +267,48 @@ export function OnboardingPage() {
         reasons: [],
         triggers: [],
       });
+
+      // Check which payment option user selected
+      if (selectedPaymentOption === 'lifetime') {
+        // User chose lifetime access - redirect to Stripe for immediate payment
+        toast({
+          title: 'Account Created!',
+          description: 'Redirecting to secure payment for lifetime access...',
+        });
+
+        const checkoutResult = await createLifetimeCheckout.mutateAsync({
+          successUrl: `${window.location.origin}/dashboard?payment=success`,
+          cancelUrl: `${window.location.origin}/dashboard?payment=cancelled`,
+        });
+
+        if (checkoutResult.testMode) {
+          // In test mode without Stripe configured
+          toast({
+            title: 'Test Mode',
+            description: 'Stripe not configured. Redirecting to dashboard...',
+          });
+          setTimeout(() => {
+            navigate('/dashboard');
+          }, 2000);
+        } else if (checkoutResult.url) {
+          // Redirect to Stripe Checkout
+          window.location.href = checkoutResult.url;
+        } else {
+          throw new Error('Failed to create checkout session');
+        }
+      } else {
+        // User chose trial - they get 7-day free trial then monthly subscription
+        toast({
+          title: 'Account Created! 🎉',
+          description: 'Please complete your payment to start your journey. After trial: $19.95/month.',
+        });
+        
+        setTimeout(() => {
+          navigate('/dashboard');
+        }, 1500);
+      }
     } catch (error) {
+      setIsRedirectingToPayment(false);
       toast({
         title: 'Error',
         description: error instanceof Error ? error.message : 'Registration failed',
@@ -1020,7 +1064,7 @@ export function OnboardingPage() {
 
                       {/* Price display */}
                       <div className="text-4xl md:text-5xl lg:text-[80px] font-bold mb-2 text-[#561F7A]">
-                        $79
+                        $49
                       </div>
                       <p className="font-regular text-base mb-2 text-[#561F7A]">Lifetime Access</p>
                       <div className="flex items-center justify-center">
@@ -1133,27 +1177,31 @@ export function OnboardingPage() {
                           </div>
                         </div>
                         {/* <p className="text-xs text-center text-gray-600 mt-3">
-                          🎯 Invest just $79 today to break free and save ${getHabitStats().yearlySpending.toLocaleString()}/year!
+                          🎯 Invest just $49 today to break free and save ${getHabitStats().yearlySpending.toLocaleString()}/year!
                         </p> */}
                         </div>
                     </div>
                   </div>
                     <p className="text-xs font-regular text-center text-[#FFFFFF] !mt-3">
-                      Invest just $79 today to break free and save ${getHabitStats().yearlySpending.toLocaleString()}/year!
+                      Invest just $49 today to break free and save ${getHabitStats().yearlySpending.toLocaleString()}/year!
                     </p>
                   <div className="space-y-3">
                     <div className='flex justify-center items-center max-w-[418px] mx-auto'>
                       <Button
-                        onClick={nextStep}
+                        onClick={() => {
+                          setSelectedPaymentOption('lifetime');
+                          nextStep();
+                        }}
                         className="w-full bg-[#F9C015] text-[#561F7A] font-semibold text-sm md:text-xl !p-5 md:h-[70px] h-[50px] rounded-[10px] hover:scale-105 transition-all duration-300"
                         >
-                          Buy  Now for $79 - LIMITED TIME OFFER 
+                          Buy  Now for $49 - LIMITED TIME OFFER 
                       </Button>
                       </div>
                       <div className='flex justify-center items-center max-w-[418px] mx-auto'>
                       <Button
                         onClick={() => {
                           setFormData({ ...formData, declinedInitialOffer: true });
+                          setSelectedPaymentOption('trial');
                           setShowFlashSale(true);
                         }}
                         variant="outline"
@@ -1205,7 +1253,7 @@ export function OnboardingPage() {
                       {/* Old Price Strikethrough */}
                       <div className="relative inline-block mb-2">
                         <span className="text-xl sm:text-[24px] font-regular text-[#561F7A]" style={{ textDecoration: 'line-through', textDecorationColor: '#561F7A', textDecorationThickness: '1px' }}>
-                          $79.00
+                          $49.00
                         </span>
                       </div>
 
@@ -1213,7 +1261,7 @@ export function OnboardingPage() {
                       <div className="text-4xl md:text-5xl lg:text-[80px] font-bold mb-2 text-[#561F7A]">
                         $19.99
                       </div>
-                      <p className="font-regular text-base mb-2 text-[#561F7A]">One-time payment. Save $59.01 today!</p>
+                      <p className="font-regular text-base mb-2 text-[#561F7A]">One-time payment. Save $29.01 today!</p>
 
                       {/* <div className="flex items-center justify-center">
                         <Button variant="default" className="bg-[#F9C015] text-[#561F7A] font-bold text-base hover:scale-105 transition-all duration-300">
@@ -1367,20 +1415,27 @@ export function OnboardingPage() {
                   <div className="space-y-3">
                     <div className='flex justify-center items-center max-w-[418px] mx-auto'>
                       <Button
-                        onClick={nextStep}
+                        onClick={() => {
+                          setSelectedPaymentOption('lifetime');
+                          nextStep();
+                        }}
                         className="w-full bg-[#F9C015] text-[#561F7A] hover:text-[#561F7A] font-semibold text-sm md:text-xl !p-5 h-[70px] rounded-[10px] hover:scale-105 transition-all duration-300"
                       >
                        {/* YES! GIVE ME 75% OFF - $19.99! */}
-                       Buy  Now for $79 - LIMITED TIME OFFER 
+                       Buy  Now for $49 - LIMITED TIME OFFER 
                       </Button>
                     </div>
                     <div className='flex justify-center items-center max-w-[418px] mx-auto'>
                       <Button
-                        onClick={nextStep}
+                        onClick={() => {
+                          // User declined both offers, so they get trial
+                          setSelectedPaymentOption('trial');
+                          nextStep();
+                        }}
                         variant="outline"
                         className="w-full h-[70px] border-none bg-[#664490] hover:bg-[#5d368c] text-[#ffffff6b] hover:text-[#ffffff] font-semibold text-sm md:text-xl rounded-[10px] hover:scale-105 transition-all duration-300"
                       >
-                        No, I'll pay $79
+                        No, I'll pay $49
                       </Button>
                     </div>
                   </div>
@@ -1440,10 +1495,24 @@ export function OnboardingPage() {
                       disabled={
                         formData.password.length < 8 || 
                         formData.password !== formData.confirmPassword ||
-                        !formData.confirmPassword
+                        !formData.confirmPassword ||
+                        isRedirectingToPayment
                       }
                     >
-                      <span className="whitespace-nowrap">Create Account & Start Journey</span>
+                      {isRedirectingToPayment ? (
+                        <span className="flex items-center gap-2">
+                          <Loader2 className="h-5 w-5 animate-spin" />
+                          <span className="whitespace-nowrap">
+                            {selectedPaymentOption === 'lifetime' ? 'Redirecting to payment...' : 'Creating your account...'}
+                          </span>
+                        </span>
+                      ) : (
+                        <span className="whitespace-nowrap">
+                          {selectedPaymentOption === 'lifetime' 
+                            ? 'Create Account & Continue to Payment' 
+                            : 'Start My Free Trial'}
+                        </span>
+                      )}
                     </Button>
                   </div>
                 </div>

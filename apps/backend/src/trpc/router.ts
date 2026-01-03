@@ -699,6 +699,76 @@ export const appRouter = router({
         return { sessionId: session.id, url: session.url, testMode: false };
       }),
 
+    // Create Stripe checkout session for lifetime access (one-time payment)
+    createLifetimeCheckoutSession: protectedProcedure
+      .input(
+        z.object({
+          successUrl: z.string().url(),
+          cancelUrl: z.string().url(),
+        })
+      )
+      .mutation(async ({ ctx, input }) => {
+        const [user] = await ctx.db
+          .select()
+          .from(profiles)
+          .where(eq(profiles.id, ctx.userId))
+          .limit(1);
+
+        if (!user) {
+          throw new Error('User not found');
+        }
+
+        // TEST MODE: Return mock checkout URL if Stripe not configured
+        if (!STRIPE_ENABLED) {
+          console.log('🧪 TEST MODE: Simulating Stripe lifetime checkout');
+          return {
+            sessionId: 'cs_test_mock_lifetime_session_id',
+            url: null, // Return null to show alert instead of redirecting
+            testMode: true,
+          };
+        }
+
+        // PRODUCTION: Create real Stripe checkout session
+        // Create or retrieve Stripe customer
+        let customerId = user.stripeCustomerId;
+        if (!customerId) {
+          const customer = await stripe.customers.create({
+            email: user.email,
+            metadata: {
+              userId: ctx.userId,
+            },
+          });
+          customerId = customer.id;
+
+          // Update user with Stripe customer ID
+          await ctx.db
+            .update(profiles)
+            .set({ stripeCustomerId: customerId })
+            .where(eq(profiles.id, ctx.userId));
+        }
+
+        // Create checkout session for one-time payment
+        const session = await stripe.checkout.sessions.create({
+          customer: customerId,
+          mode: 'payment', // One-time payment instead of subscription
+          payment_method_types: ['card'],
+          line_items: [
+            {
+              price: STRIPE_CONFIG.LIFETIME_PRICE_ID,
+              quantity: 1,
+            },
+          ],
+          success_url: input.successUrl,
+          cancel_url: input.cancelUrl,
+          metadata: {
+            userId: ctx.userId,
+            purchaseType: 'lifetime',
+          },
+        });
+
+        return { sessionId: session.id, url: session.url, testMode: false };
+      }),
+
     // Create billing portal session
     createBillingPortalSession: protectedProcedure
       .input(

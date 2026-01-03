@@ -66,17 +66,17 @@ export function PaymentWall({ reason }: PaymentWallProps) {
         {/* Description */}
         <p className="mb-8 text-gray-600">
           {reason === 'trial_expired'
-            ? 'Continue your smoke-free journey by subscribing for just $7.99/year!'
-            : 'Access all features and continue your progress for just $7.99/year!'}
+            ? 'Continue your smoke-free journey by subscribing for just $19.95/month!'
+            : 'Access all features and continue your progress for just $19.95/month!'}
         </p>
 
         {/* Pricing Box */}
         <div className="mb-8 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50 p-6">
           <div className="flex items-baseline justify-center gap-2">
-            <span className="text-5xl font-bold text-gray-900">$7.99</span>
-            <span className="text-xl text-gray-600">/year</span>
+            <span className="text-5xl font-bold text-gray-900">$19.95</span>
+            <span className="text-xl text-gray-600">/month</span>
           </div>
-          <p className="mt-2 text-sm text-gray-600">Less than $0.67/month</p>
+          <p className="mt-2 text-sm text-gray-600">Cancel anytime</p>
         </div>
 
         {/* Benefits */}

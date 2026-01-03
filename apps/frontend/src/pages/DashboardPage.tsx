@@ -1,6 +1,7 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { differenceInHours, differenceInDays } from 'date-fns';
 import { motion } from 'framer-motion';
+import { useEffect } from 'react';
 import { AppShell } from '@/components/layout/AppShell';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,9 +11,35 @@ import { AnimatedCard, FadeIn } from '@/components/ui/animated-container';
 import { DashboardSkeleton } from '@/components/ui/skeleton';
 import StatisticsCard from '@/components/statistics-card';
 import StepsBlock from '@/components/steps-block';
+import { useToast } from '@/hooks/use-toast';
 
 export function DashboardPage() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { toast } = useToast();
+
+  // Handle payment redirect status
+  useEffect(() => {
+    const paymentStatus = searchParams.get('payment');
+    if (paymentStatus === 'success') {
+      toast({
+        title: 'Welcome! 🎉',
+        description: "Payment successful! Your lifetime access is now active. Let's start your smoke-free journey!",
+      });
+      // Clear the payment param from URL
+      searchParams.delete('payment');
+      setSearchParams(searchParams, { replace: true });
+    } else if (paymentStatus === 'cancelled') {
+      toast({
+        title: 'Payment Cancelled',
+        description: 'You can complete your payment anytime from settings to activate lifetime access.',
+        variant: 'destructive',
+      });
+      // Clear the payment param from URL
+      searchParams.delete('payment');
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [searchParams, setSearchParams, toast]);
 
   // Fetch active quit attempt
   const { data: quitAttempt, isLoading } = trpc.quitAttempts.getActive.useQuery();

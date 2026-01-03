@@ -95,10 +95,9 @@ async function handleCheckoutSessionCompleted(
   fastify: FastifyInstance
 ) {
   const customerId = session.customer as string;
-  const subscriptionId = session.subscription as string;
 
-  if (!customerId || !subscriptionId) {
-    fastify.log.error({ session }, 'Missing customer or subscription ID in checkout session');
+  if (!customerId) {
+    fastify.log.error({ session }, 'Missing customer ID in checkout session');
     return;
   }
 
@@ -111,6 +110,33 @@ async function handleCheckoutSessionCompleted(
 
   if (!user) {
     fastify.log.error({ customerId }, 'User not found for Stripe customer');
+    return;
+  }
+
+  // Check if this is a one-time payment (lifetime access) or subscription
+  if (session.mode === 'payment') {
+    // Handle lifetime access payment
+    const metadata = session.metadata;
+    if (metadata?.purchaseType === 'lifetime') {
+      await db
+        .update(profiles)
+        .set({
+          subscriptionStatus: 'lifetime',
+          subscriptionPlan: 'lifetime',
+          updatedAt: new Date(),
+        })
+        .where(eq(profiles.id, user.id));
+
+      fastify.log.info({ userId: user.id, paymentIntentId: session.payment_intent }, 'Lifetime access activated');
+    }
+    return;
+  }
+
+  // Handle subscription payment
+  const subscriptionId = session.subscription as string;
+
+  if (!subscriptionId) {
+    fastify.log.error({ session }, 'Missing subscription ID in checkout session');
     return;
   }
 

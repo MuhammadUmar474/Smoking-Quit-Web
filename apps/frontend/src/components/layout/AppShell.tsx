@@ -35,7 +35,7 @@ export function AppShell({ children }: AppShellProps) {
 
   const needsToStartTrial = subscriptionStatus?.status === 'incomplete';
   const isTrialing = subscriptionStatus?.status === 'trialing';
-  const isPaid = subscriptionStatus?.status === 'active';
+  const isPaid = subscriptionStatus?.status === 'active' || subscriptionStatus?.status === 'lifetime';
   const hasAccess = accessCheck?.hasAccess ?? true; // Default to true while loading
 
   // Show start trial modal if user needs to start trial

@@ -19,9 +19,12 @@ export { STRIPE_ENABLED };
 export const STRIPE_CONFIG = {
   MONTHLY_PRICE_ID: process.env.STRIPE_MONTHLY_PRICE_ID || '',
   MONTHLY_PRICE_AMOUNT: 1995, // $19.95 in cents
+  LIFETIME_PRICE_ID: process.env.STRIPE_LIFETIME_PRICE_ID || '',
+  LIFETIME_PRICE_AMOUNT: 4900, // $49.00 in cents
   TRIAL_DAYS: 7,
   CURRENCY: 'usd',
   PRODUCT_NAME: 'Smoking Quit App - Monthly Subscription',
+  LIFETIME_PRODUCT_NAME: 'Smoking Quit App - Lifetime Access',
 } as const;
 
 // Helper to check if trial has expired
@@ -35,7 +38,7 @@ export function hasActiveSubscription(
   subscriptionStatus: string | null,
   trialEndDate: Date | null
 ): boolean {
-  if (subscriptionStatus === 'active') return true;
+  if (subscriptionStatus === 'active' || subscriptionStatus === 'lifetime') return true;
   if (subscriptionStatus === 'trialing' && trialEndDate) {
     return !hasTrialExpired(trialEndDate);
   }
