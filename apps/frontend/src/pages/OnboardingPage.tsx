@@ -261,7 +261,12 @@ export function OnboardingPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ formData }),
+        body: JSON.stringify({ 
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          phone: formData.phone,
+         }),
       });
 
       // Store auth in Zustand
