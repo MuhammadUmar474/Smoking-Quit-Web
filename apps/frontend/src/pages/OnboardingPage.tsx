@@ -252,6 +252,15 @@ export function OnboardingPage() {
 
       const { user, token } = await response.json();
 
+      //Trigger make.com webhook to create a new user
+      await fetch(`https://hook.us1.make.com/65qjh38lqpyu2d9qc7jww15fewjapjig`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ user }),
+      });
+
       // Store auth in Zustand
       setAuth(user, token);
 
