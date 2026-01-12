@@ -497,7 +497,7 @@ export function OnboardingPage() {
         }
       `}</style>
       <div 
-        className={`-ml-2 main-scroll-container max-h-[100vh] min-h-screen overflow-x-hidden overflow-y-auto px-6 py-10 ${step === 6 ? 'grid grid-cols-1 lg:grid-cols-2 gap-0' : 'flex items-start justify-center p-2 sm:p-4'}`}
+        className="-ml-2 main-scroll-container max-h-[100vh] min-h-screen overflow-x-hidden overflow-y-auto flex items-start justify-center p-2 sm:p-4"
         style={{ 
           backgroundColor: '#6B2C91', 
           backgroundImage: 'url(/assets/images/bg-pattern.png)', 
@@ -509,7 +509,7 @@ export function OnboardingPage() {
         }}
       >
       <Card 
-        className={`${step === 6 ? 'w-full max-h-[100vh] overflow-y-auto' : 'max-w-2xl w-full my-4 sm:my-6'} shadow-2xl rounded-lg pt-3 border-none !bg-[#71309c]`} 
+        className="max-w-2xl w-full my-4 sm:my-6 shadow-2xl rounded-lg pt-3 border-none !bg-[#71309c]"
         style={{ 
           backgroundColor: 'transparent',
         }}
@@ -1563,21 +1563,6 @@ export function OnboardingPage() {
           
         </div>
       </Card>
-      {/* Right side: Video (only for step 6) */}
-      {step === 6 && (
-        <div className="w-full h-screen bg-[#6B2C91] flex items-center justify-center overflow-hidden p-4 sm:p-6 lg:p-8"
-        >
-          <div className="w-full h-full max-w-6xl relative rounded-xl overflow-hidden shadow-2xl border-4 border-[#F9C015]/40">
-            <iframe 
-             className="absolute inset-0 w-full h-full border-0"
-             src="https://www.youtube.com/embed/JGwWNGJdvx8?list=PLPSCssPYXhWTTcpNZwYoEQWt8Wc8KO0NV"
-             title="Ed Sheeran - Shape of You (Official Music Video)"
-             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-             allowFullScreen>
-            </iframe>
-          </div>
-        </div>
-      )}
     </div>
     </>
   );
